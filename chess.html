@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChessDOTCOM</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #333;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .chess-container {
+      text-align: center;
+    }
+
+    #chess-board {
+      display: grid;
+      grid-template-columns: repeat(8, 50px);
+      grid-template-rows: repeat(8, 50px);
+      margin: 20px auto;
+      border: 2px solid #fff;
+    }
+
+    .cell {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .cell.white {
+      background-color: #f0d9b5;
+    }
+
+    .cell.black {
+      background-color: #b58863;
+    }
+
+    .status {
+      margin-top: 10px;
+    }
+
+    @media (max-width: 600px) {
+      #chess-board {
+        grid-template-columns: repeat(8, 40px);
+        grid-template-rows: repeat(8, 40px);
+      }
+
+      .cell {
+        width: 40px;
+        height: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chess-container">
+    <h1>Secret Chess Page 🤫</h1>
+    <div id="chess-board"></div>
+    <div class="status">
+      <p>Turn: <span id="current-player">White</span></p>
+    </div>
+  </div>
+  <script>
+    const board = document.getElementById("chess-board");
+    const currentPlayer = document.getElementById("current-player");
+    let isWhiteTurn = true;
+
+    // Initialize the chessboard
+    function initializeBoard() {
+      board.innerHTML = "";
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          cell.classList.add((row + col) % 2 === 0 ? "white" : "black");
+          cell.dataset.row = row;
+          cell.dataset.col = col;
+          cell.addEventListener("click", handleCellClick);
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    // Handle cell click for moves
+    function handleCellClick(event) {
+      const cell = event.target;
+      const row = cell.dataset.row;
+      const col = cell.dataset.col;
+
+      if (cell.textContent) {
+        alert("Invalid move! Cell is already occupied.");
+        return;
+      }
+
+      // Mark the cell with the current player's piece
+      cell.textContent = isWhiteTurn ? "♙" : "♟";
+      cell.style.color = isWhiteTurn ? "#fff" : "#000";
+
+      // Switch turn
+      isWhiteTurn = !isWhiteTurn;
+      currentPlayer.textContent = isWhiteTurn ? "White" : "Black";
+    }
+
+    initializeBoard();
+  </script>
+</body>
+</html>
