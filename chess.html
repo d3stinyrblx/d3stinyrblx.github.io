@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ChessDOTCOM</title>
+  <title>Secret Chess Game</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -14,29 +14,33 @@
       align-items: center;
       height: 100vh;
       margin: 0;
+      overflow: hidden;
     }
 
     .chess-container {
       text-align: center;
+      position: relative;
+      padding: 20px;
     }
 
     #chess-board {
       display: grid;
-      grid-template-columns: repeat(8, 50px);
-      grid-template-rows: repeat(8, 50px);
+      grid-template-columns: repeat(8, 1fr);
+      grid-template-rows: repeat(8, 1fr);
       margin: 20px auto;
       border: 2px solid #fff;
+      transition: all 0.5s ease-in-out;
     }
 
     .cell {
-      width: 50px;
-      height: 50px;
+      width: 60px;
+      height: 60px;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-size: 24px;
-      font-weight: bold;
+      font-size: 32px;
       cursor: pointer;
+      transition: transform 0.2s ease, background-color 0.2s ease;
     }
 
     .cell.white {
@@ -47,26 +51,48 @@
       background-color: #b58863;
     }
 
+    .cell:hover {
+      transform: scale(1.1);
+    }
+
     .status {
-      margin-top: 10px;
+      margin-top: 20px;
     }
 
     @media (max-width: 600px) {
       #chess-board {
-        grid-template-columns: repeat(8, 40px);
-        grid-template-rows: repeat(8, 40px);
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        width: 80vw;
+        height: 80vw;
       }
 
       .cell {
-        width: 40px;
-        height: 40px;
+        width: 12vw;
+        height: 12vw;
+        font-size: 24px;
+      }
+    }
+
+    .move-animation {
+      animation: movePiece 0.5s ease-in-out;
+    }
+
+    @keyframes movePiece {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
       }
     }
   </style>
 </head>
 <body>
   <div class="chess-container">
-    <h1>Secret Chess Page 🤫</h1>
+    <h1>D3stiny's Secret Chess Lair</h1>
     <div id="chess-board"></div>
     <div class="status">
       <p>Turn: <span id="current-player">White</span></p>
@@ -76,9 +102,92 @@
     const board = document.getElementById("chess-board");
     const currentPlayer = document.getElementById("current-player");
     let isWhiteTurn = true;
+    let selectedPiece = null;
+    let gameBoard = [
+      ["♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"],
+      ["♟", "♟", "♟", "♟", "♟", "♟", "♟", "♟"],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["♙", "♙", "♙", "♙", "♙", "♙", "♙", "♙"],
+      ["♖", "♘", "♗", "♕", "♔", "♗", "♘", "♖"]
+    ];
 
-    // Initialize the chessboard
-    function initializeBoard() {
+    const pieceSymbols = {
+      "♙": "pawn", "♖": "rook", "♘": "knight", "♗": "bishop", "♕": "queen", "♔": "king",
+      "♟": "pawn", "♜": "rook", "♞": "knight", "♝": "bishop", "♛": "queen", "♚": "king"
+    };
+
+    const movePiece = (from, to) => {
+      const fromCell = document.querySelector(`[data-row='${from.row}'][data-col='${from.col}']`);
+      const toCell = document.querySelector(`[data-row='${to.row}'][data-col='${to.col}']`);
+      const piece = gameBoard[from.row][from.col];
+      gameBoard[to.row][to.col] = piece;
+      gameBoard[from.row][from.col] = "";
+
+      // Add animation class
+      toCell.classList.add("move-animation");
+      renderBoard();
+      isWhiteTurn = !isWhiteTurn;
+      currentPlayer.textContent = isWhiteTurn ? "White" : "Black";
+    };
+
+    const handleCellClick = (event) => {
+      const cell = event.target;
+      const row = cell.dataset.row;
+      const col = cell.dataset.col;
+
+      if (selectedPiece) {
+        const [selectedRow, selectedCol] = selectedPiece;
+        const piece = gameBoard[selectedRow][selectedCol];
+
+        if (isValidMove(piece, selectedRow, selectedCol, row, col)) {
+          movePiece({ row: selectedRow, col: selectedCol }, { row, col });
+          selectedPiece = null;
+        } else {
+          selectedPiece = null;
+        }
+      } else {
+        if (gameBoard[row][col] && isCorrectTurn(row, col)) {
+          selectedPiece = [row, col];
+        }
+      }
+    };
+
+    const isCorrectTurn = (row, col) => {
+      const piece = gameBoard[row][col];
+      return (isWhiteTurn && piece === piece.toUpperCase()) || (!isWhiteTurn && piece === piece.toLowerCase());
+    };
+
+    const isValidMove = (piece, fromRow, fromCol, toRow, toCol) => {
+      switch (piece) {
+        case "♙":
+          return toRow === fromRow - 1 && toCol === fromCol && !gameBoard[toRow][toCol];
+        case "♟":
+          return toRow === fromRow + 1 && toCol === fromCol && !gameBoard[toRow][toCol];
+        case "♖":
+        case "♜":
+          return fromRow === toRow || fromCol === toCol;
+        case "♘":
+        case "♞":
+          return Math.abs(fromRow - toRow) === 2 && Math.abs(fromCol - toCol) === 1 ||
+                 Math.abs(fromRow - toRow) === 1 && Math.abs(fromCol - toCol) === 2;
+        case "♗":
+        case "♝":
+          return Math.abs(fromRow - toRow) === Math.abs(fromCol - toCol);
+        case "♕":
+        case "♛":
+          return fromRow === toRow || fromCol === toCol || Math.abs(fromRow - toRow) === Math.abs(fromCol - toCol);
+        case "♔":
+        case "♚":
+          return Math.abs(fromRow - toRow) <= 1 && Math.abs(fromCol - toCol) <= 1;
+        default:
+          return false;
+      }
+    };
+
+    const renderBoard = () => {
       board.innerHTML = "";
       for (let row = 0; row < 8; row++) {
         for (let col = 0; col < 8; col++) {
@@ -87,33 +196,15 @@
           cell.classList.add((row + col) % 2 === 0 ? "white" : "black");
           cell.dataset.row = row;
           cell.dataset.col = col;
+          cell.textContent = gameBoard[row][col] || "";
           cell.addEventListener("click", handleCellClick);
           board.appendChild(cell);
         }
       }
-    }
+    };
 
-    // Handle cell click for moves
-    function handleCellClick(event) {
-      const cell = event.target;
-      const row = cell.dataset.row;
-      const col = cell.dataset.col;
-
-      if (cell.textContent) {
-        alert("Invalid move! Cell is already occupied.");
-        return;
-      }
-
-      // Mark the cell with the current player's piece
-      cell.textContent = isWhiteTurn ? "♙" : "♟";
-      cell.style.color = isWhiteTurn ? "#fff" : "#000";
-
-      // Switch turn
-      isWhiteTurn = !isWhiteTurn;
-      currentPlayer.textContent = isWhiteTurn ? "White" : "Black";
-    }
-
-    initializeBoard();
+    // Initialize the game board on page load
+    renderBoard();
   </script>
 </body>
 </html>
