@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe: Fishing Adventure</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #87CEFA; /* Light blue background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-template-rows: repeat(3, 100px);
+            gap: 5px;
+            position: relative;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #4C9FE1;
+            border: 2px solid #1E70A5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.3s ease;
+        }
+
+        .cell:hover {
+            background-color: #3588B1;
+        }
+
+        .rod {
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            width: 10px;
+            height: 200px;
+            background-color: #8B4513; /* Brown rod */
+            transform-origin: top center;
+            animation: rod-drop 0.5s ease-out forwards;
+        }
+
+        @keyframes rod-drop {
+            0% {
+                transform: translateX(-50%) rotate(0deg);
+            }
+            100% {
+                transform: translateX(-50%) rotate(90deg);
+            }
+        }
+
+        .fish, .hook {
+            position: absolute;
+            top: -50px;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5em;
+            text-align: center;
+            line-height: 50px;
+            animation: dropShape 0.5s ease-out forwards;
+        }
+
+        .fish {
+            color: #FF6347; /* Fish color */
+        }
+
+        .hook {
+            color: #32CD32; /* Hook color */
+        }
+
+        @keyframes dropShape {
+            0% {
+                top: -50px;
+            }
+            100% {
+                top: 25px;
+            }
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 1.5em;
+            color: #fff;
+        }
+
+        #game-over {
+            display: none;
+            color: #fff;
+            font-size: 1.5em;
+        }
+
+        .restart {
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 600px) {
+            .game-board {
+                grid-template-columns: repeat(3, 80px);
+                grid-template-rows: repeat(3, 80px);
+                gap: 3px;
+            }
+
+            .cell {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+        <div class="game-board" id="game-board">
+            <div class="cell" id="cell-0"></div>
+            <div class="cell" id="cell-1"></div>
+            <div class="cell" id="cell-2"></div>
+            <div class="cell" id="cell-3"></div>
+            <div class="cell" id="cell-4"></div>
+            <div class="cell" id="cell-5"></div>
+            <div class="cell" id="cell-6"></div>
+            <div class="cell" id="cell-7"></div>
+            <div class="cell" id="cell-8"></div>
+        </div>
+        <div id="status">It's Fish's Turn</div>
+        <div id="game-over">
+            <p id="game-result"></p>
+            <button class="restart" onclick="restartGame()">Restart</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPlayer = "fish"; // "fish" or "hook"
+        let gameBoard = ["", "", "", "", "", "", "", "", ""];
+        let gameOver = false;
+
+        const cells = document.querySelectorAll(".cell");
+        const gameStatus = document.getElementById("status");
+        const gameOverDiv = document.getElementById("game-over");
+        const gameResult = document.getElementById("game-result");
+
+        function makeMove(cellIndex) {
+            if (gameBoard[cellIndex] !== "" || gameOver) return;
+
+            gameBoard[cellIndex] = currentPlayer;
+            const cell = cells[cellIndex];
+            const rod = document.createElement('div');
+            rod.classList.add('rod');
+            cell.appendChild(rod);
+
+            const shape = document.createElement('div');
+            shape.classList.add(currentPlayer);
+            shape.innerText = currentPlayer === "fish" ? "🐟" : "🎣";
+            cell.appendChild(shape);
+
+            triggerRodAndShape(rod, shape);
+
+            if (checkWinner()) {
+                gameResult.innerText = `${currentPlayer === "fish" ? "Fish" : "Hook"} Wins!`;
+                gameOverDiv.style.display = "block";
+                gameOver = true;
+                return;
+            }
+
+            currentPlayer = currentPlayer === "fish" ? "hook" : "fish";
+            gameStatus.innerText = `It's ${currentPlayer === "fish" ? "Fish" : "Hook"}'s Turn`;
+        }
+
+        function triggerRodAndShape(rod, shape) {
+            setTimeout(() => {
+                rod.style.animation = "rod-drop 0.5s ease-out forwards";
+                shape.style.animation = "dropShape 0.5s ease-out forwards";
+            }, 10); // Trigger animation shortly after appending
+        }
+
+        function checkWinner() {
+            const winningCombinations = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6] // Diagonals
+            ];
+
+            for (let combo of winningCombinations) {
+                const [a, b, c] = combo;
+                if (gameBoard[a] && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function restartGame() {
+            gameBoard = ["", "", "", "", "", "", "", "", ""];
+            gameOver = false;
+            gameOverDiv.style.display = "none";
+            cells.forEach(cell => cell.innerHTML = "");
+            gameStatus.innerText = "It's Fish's Turn";
+        }
+
+        cells.forEach((cell, index) => {
+            cell.addEventListener("click", () => makeMove(index));
+        });
+    </script>
+</body>
+</html>
